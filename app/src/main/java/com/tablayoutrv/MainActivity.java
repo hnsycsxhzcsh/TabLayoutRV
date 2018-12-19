@@ -54,8 +54,6 @@ public class MainActivity extends AppCompatActivity {
         getData();
         //初始化RecyclerView
         initRv();
-
-
     }
 
     public void initRvTabLayout(RvAdapter.TabLayoutViewHolder holderTabLayout) {
@@ -148,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    //找到第一个可见的item的位置
     private int findFirstVisibleItem() {
         int aa[] = mStaggeredGridLayoutManager.findFirstVisibleItemPositions(null);
         if (aa != null) {
@@ -171,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //recyclerview中的tablayout监听
     private TabLayout.OnTabSelectedListener holderListener = new TabLayout.OnTabSelectedListener() {
         @Override
         public void onTabSelected(TabLayout.Tab tab) {
@@ -189,12 +189,16 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    //页面中的tablayout的监听
     private TabLayout.OnTabSelectedListener mainTabListener = new TabLayout.OnTabSelectedListener() {
         @Override
         public void onTabSelected(TabLayout.Tab tab) {
+            //当页面中的tablayout被选中时
+            //获取现在的tab选中位置
             int position = tab.getPosition();
+            //使RecyclerView中的tab也切换到相同的一个位置
             mHolderTabLayout.mTlHome.getTabAt(position).select();
-            //TODO 暂时这么做
+            //如果当前tab的位置不是第一个，那么
             if (position != 0) {
                 mLlMainTablayout.setVisibility(View.VISIBLE);
             }
@@ -207,11 +211,9 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < mRvDatas.size(); i++) {
                 RvData bean = mRvDatas.get(i);
                 if (text.equals(bean.getParentcategory().getName())) {
-//                        mRvHome.scrollToPosition(RV_HEADER_COUNT + i);
                     stopScroll = true;
                     mStaggeredGridLayoutManager.scrollToPositionWithOffset
                             (RV_HEADER_COUNT + i, mLlMainTablayout.getHeight());
-//                        mStaggeredGridLayoutManager.smoothScrollToPosition(mRvHome,null, RV_HEADER_COUNT + i);
                     break;
                 }
             }
@@ -228,6 +230,8 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+
+    //初始化RecyclerView
     private void initRv() {
         //流式布局初始化RecyclerView
         mStaggeredGridLayoutManager = new
@@ -241,6 +245,7 @@ public class MainActivity extends AppCompatActivity {
                 SPAN, RV_HEADER_COUNT));
     }
 
+    //测试数据
     private void getData() {
         //recyclerview 的数据
         String dataStr = getResources().getString(R.string.rvdata);
@@ -255,6 +260,7 @@ public class MainActivity extends AppCompatActivity {
         mParentCategoryList = mGson.fromJson(tbdataStr, collectionType2);
     }
 
+    //判断目前tablayout中的数据是否和最新的数据是否相同
     private boolean isEqualTabValue(RvAdapter.TabLayoutViewHolder holderTabLayout) {
         boolean isEqual = true;
         int tabCount = holderTabLayout.mTlHome.getTabCount();
