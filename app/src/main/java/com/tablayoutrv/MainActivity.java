@@ -19,8 +19,8 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     private Gson mGson = new Gson();
-    private static final int SPAN = 2;
-    private static final int RV_HEADER_COUNT = 2;
+    private static final int SPAN = 2;   //recycler 最大列数
+    private static final int RV_HEADER_COUNT = 2;  //recyclerview 除掉底部的item外头部布局的个数
 
     private RecyclerView mRvHome;
     private TabLayout mTlMain;
@@ -32,7 +32,6 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout mLlMainTablayout;
     private boolean stopChange = false;
     private boolean stopScroll = false;
-    private int[] mLocationTitleTab = new int[2];
     private int[] mLocationTitle = new int[2];
     private int[] mLocationRvTab = new int[2];
     private int titleX = 0;
@@ -45,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         mRvHome = findViewById(R.id.rv_list);
         mTlMain = findViewById(R.id.tl_home);
         mLlMainTablayout = findViewById(R.id.ll_main_tablayout);
@@ -63,13 +63,16 @@ public class MainActivity extends AppCompatActivity {
         }
         this.mHolderTabLayout = holderTabLayout;
 
+        //设置Tablayout指示器颜色
         mHolderTabLayout.mTlHome.setSelectedTabIndicatorColor(Color.rgb(255, 0, 0));
         mTlMain.setSelectedTabIndicatorColor(Color.rgb(255, 0, 0));
 
+        //初始化前先删除所有的tab
         if (mHolderTabLayout.mTlHome.getTabCount() > 0) {
             mHolderTabLayout.mTlHome.removeAllTabs();
         }
 
+        //为tablayout添加tab
         for (int i = 0; i < mParentCategoryList.size(); i++) {
             mHolderTabLayout.mTlHome.addTab(mHolderTabLayout.mTlHome.newTab().
                     setText(mParentCategoryList.get(i).getName()), i);
@@ -84,28 +87,29 @@ public class MainActivity extends AppCompatActivity {
                     setText(mParentCategoryList.get(i).getName()), i);
         }
 
-        //两次监听会有异常，添加监听前先删除
+        //两次监听会有异常，添加监听前先删除之前的监听
         mHolderTabLayout.mTlHome.removeOnTabSelectedListener(holderListener);
         mHolderTabLayout.mTlHome.addOnTabSelectedListener(holderListener);
 
         mTlMain.removeOnTabSelectedListener(mainTabListener);
         mTlMain.addOnTabSelectedListener(mainTabListener);
 
+        //recyclerview的滑动监听
         mRvHome.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-//                RecyclerView.SCROLL_STATE_IDLE     滑动停止
-//                RecyclerView.SCROLL_STATE_DRAGGING     手动正在滑动进行时
-//                RecyclerView.SCROLL_STATE_SETTLING     惯性滑动进行时
                 super.onScrollStateChanged(recyclerView, newState);
             }
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
+                //获取标题在屏幕中的的位置
                 getTitleXY();
+                //获取RecyclerView的tablayout在屏幕中的位置
                 getRvTabXY();
                 int position = findFirstVisibleItem();
+                //
                 if (rvTabY > 0) {
                     int height = mLlHomeTitle.getHeight();
                     if (rvTabY <= titleY + height) {
@@ -121,12 +125,14 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
+                //这个很重要，如果true(true代表点击了页面中的tablayout，这里不需要再给页面中的tablaout做改变)
                 if (stopScroll) {
                     stopScroll = false;
                     return;
                 }
 
-                if (position >= 6) {
+                //根据第一个可见的item的属性，来设置页面中的tablayout切换到哪个tab
+                if (position >= RV_HEADER_COUNT) {
                     RvData bean = mRvDatas.get(position - RV_HEADER_COUNT);
                     String shortName = bean.getParentcategory().getName();
                     int selectedTabPosition = mTlMain.getSelectedTabPosition();
@@ -146,29 +152,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //找到第一个可见的item的位置
-    private int findFirstVisibleItem() {
-        int aa[] = mStaggeredGridLayoutManager.findFirstVisibleItemPositions(null);
-        if (aa != null) {
-            return aa[0];
-        } else {
-            return -1;
-        }
-    }
-
-    private void getTitleXY() {
-        mLlHomeTitle.getLocationOnScreen(mLocationTitle);
-        titleX = mLocationTitle[0];
-        titleY = mLocationTitle[1];
-    }
-
-    private void getRvTabXY() {
-        if (mHolderTabLayout != null) {
-            mHolderTabLayout.mLlTlHome.getLocationOnScreen(mLocationRvTab);
-            rvTabX = mLocationRvTab[0];
-            rvTabY = mLocationRvTab[1];
-        }
-    }
 
     //recyclerview中的tablayout监听
     private TabLayout.OnTabSelectedListener holderListener = new TabLayout.OnTabSelectedListener() {
@@ -203,10 +186,13 @@ public class MainActivity extends AppCompatActivity {
                 mLlMainTablayout.setVisibility(View.VISIBLE);
             }
 
+            //这句很关键，如果值为不能改变那么，不执行
             if (stopChange) {
                 stopChange = false;
                 return;
             }
+
+            //滚动到RcyclerView对应的位置
             String text = (String) mTlMain.getTabAt(position).getText();
             for (int i = 0; i < mRvDatas.size(); i++) {
                 RvData bean = mRvDatas.get(i);
@@ -230,6 +216,31 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    //找到第一个可见的item的位置
+    private int findFirstVisibleItem() {
+        int aa[] = mStaggeredGridLayoutManager.findFirstVisibleItemPositions(null);
+        if (aa != null) {
+            return aa[0];
+        } else {
+            return -1;
+        }
+    }
+
+    //获取页面标题mLlHomeTitle在屏幕中的位置
+    private void getTitleXY() {
+        mLlHomeTitle.getLocationOnScreen(mLocationTitle);
+        titleX = mLocationTitle[0];
+        titleY = mLocationTitle[1];
+    }
+
+    //获取RecyclerView中的TabLayout在屏幕中的位置
+    private void getRvTabXY() {
+        if (mHolderTabLayout != null) {
+            mHolderTabLayout.mLlTlHome.getLocationOnScreen(mLocationRvTab);
+            rvTabX = mLocationRvTab[0];
+            rvTabY = mLocationRvTab[1];
+        }
+    }
 
     //初始化RecyclerView
     private void initRv() {
