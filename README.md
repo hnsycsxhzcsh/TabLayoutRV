@@ -1,5 +1,6 @@
 # TabLayoutRV
 TabLayout和RecyclerView结合，点击TabLayout会切换到对应的RecyclerView位置，滚动RecyclerView时TabLayout会跟着切换到对应位置。
+如果有帮助到大家希望点下右上角Star，谢谢！
 
 <a href="https://github.com/hnsycsxhzcsh/TabLayoutRV/blob/master/myres/tablayoutrv.apk">Download Apk</a>
 
